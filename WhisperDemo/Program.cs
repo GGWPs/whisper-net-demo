@@ -1,5 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using NAudio.Wave;
+using System.Diagnostics;
 using Whisper.net;
 using Whisper.net.Ggml;
 
@@ -8,9 +8,16 @@ class Program
     static async Task Main(string[] args)
     {
 
-        var audioFilePath = "c:/sounds/test.mp3";
+        var audioFilePath = "";
 
+        // Check if the provided file exists
+        if (!File.Exists(audioFilePath))
+        {
+            Console.WriteLine("Audio file not found.");
+            return;
+        }
 
+        // Download the Whisper model if it doesn't exist
         var modelName = "ggml-large-v3.bin";
         if (!File.Exists(modelName))
         {
@@ -19,7 +26,7 @@ class Program
             await modelStream.CopyToAsync(fileWriter);
         }
 
-        // Convert any audio format to WAV
+        // Convert any audio format to WAV using FFmpeg
         var wavFilePath = ConvertToWav(audioFilePath);
 
         if (string.IsNullOrEmpty(wavFilePath))
@@ -43,10 +50,10 @@ class Program
         }
 
         // Clean up the temporary WAV file if necessary
-        /*if (wavFilePath != audioFilePath)
+        if (wavFilePath != audioFilePath)
         {
             File.Delete(wavFilePath);
-        }*/
+        }
     }
 
     static string ConvertToWav(string inputFilePath)
@@ -56,15 +63,30 @@ class Program
             // Output WAV file path
             var outputFilePath = Path.ChangeExtension(inputFilePath, ".wav");
 
-            using (var reader = CreateReaderForFile(inputFilePath))
+            // Construct the FFmpeg conversion command
+            string ffmpegArgs = $"-i \"{inputFilePath}\" -ar 16000 -ac 1 -sample_fmt s16 \"{outputFilePath}\"";
+
+            // Start the FFmpeg process
+            var ffmpegProcess = new Process
             {
-                // Ensure the WAV format is PCM (Pulse Code Modulation), 16kHz, 16-bit, mono
-                var pcmFormat = new WaveFormat(16000, 16, 1); // 16kHz, 16-bit, mono
-                using (var resampler = new MediaFoundationResampler(reader, pcmFormat))
+                StartInfo = new ProcessStartInfo
                 {
-                    resampler.ResamplerQuality = 60;  // Set quality level (0-60), 60 is highest
-                    WaveFileWriter.CreateWaveFile(outputFilePath, resampler);
+                    FileName = "ffmpeg",
+                    Arguments = ffmpegArgs,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 }
+            };
+
+            ffmpegProcess.Start();
+            ffmpegProcess.WaitForExit();
+
+            // Check if the conversion was successful
+            if (ffmpegProcess.ExitCode != 0)
+            {
+                throw new Exception("FFmpeg failed to convert the file.");
             }
 
             return outputFilePath;
@@ -73,26 +95,6 @@ class Program
         {
             Console.WriteLine($"Error converting file to WAV: {ex.Message}");
             return null;
-        }
-    }
-
-    // Factory method to create the correct type of reader depending on the file format
-    static WaveStream CreateReaderForFile(string filePath)
-    {
-        string extension = Path.GetExtension(filePath).ToLowerInvariant();
-
-        if (extension == ".mp3")
-        {
-            return new Mp3FileReader(filePath);
-        }
-        else if (extension == ".wav")
-        {
-            return new WaveFileReader(filePath);
-        }
-        else
-        {
-            // Use MediaFoundationReader for most other formats (e.g., AAC, WMA, etc.)
-            return new MediaFoundationReader(filePath);
         }
     }
 }
