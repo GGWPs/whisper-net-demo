@@ -11,7 +11,7 @@ class Program
         var audioFilePath = "c:/sounds/test.mp3";
 
 
-        var modelName = "ggml-base.bin";
+        var modelName = "ggml-large-v3.bin";
         if (!File.Exists(modelName))
         {
             using var modelStream = await WhisperGgmlDownloader.GetGgmlModelAsync(GgmlType.Base);
