@@ -35,6 +35,9 @@ class Program
             return;
         }
 
+        // Prepare output TXT file path
+        var outputTxtFilePath = Path.ChangeExtension(audioFilePath, ".txt");
+
         // Initialize Whisper with the downloaded model
         using var whisperFactory = WhisperFactory.FromPath(modelName);
         using var processor = whisperFactory.CreateBuilder()
@@ -44,10 +47,16 @@ class Program
         // Open the WAV file and process it
         using var fileStream = File.OpenRead(wavFilePath);
 
-        await foreach (var result in processor.ProcessAsync(fileStream))
+        using (var textFileWriter = new StreamWriter(outputTxtFilePath))
         {
-            Console.WriteLine($"{result.Start}->{result.End}: {result.Text}");
+            await foreach (var result in processor.ProcessAsync(fileStream))
+            {
+                // Write transcription to the text file
+                textFileWriter.WriteLine($"{result.Start}->{result.End}: {result.Text}");
+            }
         }
+
+        Console.WriteLine($"Transcription completed and saved to: {outputTxtFilePath}");
 
         // Clean up the temporary WAV file if necessary
         if (wavFilePath != audioFilePath)
