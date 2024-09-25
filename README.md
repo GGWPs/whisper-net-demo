@@ -17,7 +17,7 @@ Before running this demo, make sure you have the following installed on your mac
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/whisper-net-demo.git
+   git clone https://github.com/GGWPs/whisper-net-demo.git
    cd whisper-net-demo
    ```
 
@@ -46,33 +46,9 @@ You can run the demo with an example audio file using the command below:
 dotnet run --audio-file "path_to_audio_file.wav"
 ```
 
-### Code Example
-Here’s a simple code snippet from the demo that shows how to use the Whisper.Net package for transcribing an audio file:
-
-```csharp
-using Whisper.Net;
-
-public class TranscriptionService
-{
-    public static async Task<string> TranscribeAudio(string filePath)
-    {
-        var whisper = new WhisperModel();
-        string transcription = await whisper.TranscribeAsync(filePath);
-        return transcription;
-    }
-
-    static async Task Main(string[] args)
-    {
-        string audioFilePath = args[0];
-        string transcription = await TranscribeAudio(audioFilePath);
-        Console.WriteLine("Transcription: " + transcription);
-    }
-}
-```
 
 ### Parameters
-- `--audio-file` (Required): Path to the audio file you wish to transcribe.
-- `--language` (Optional): Specify the language model for transcription. Default is English.
+- `--audio-file` (Optional): Path to the audio file you wish to transcribe.
 
 ## Supported Audio Formats
 Whisper.Net supports a variety of audio formats:
@@ -95,8 +71,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Acknowledgments
 This project uses OpenAI's Whisper model and the Whisper.Net package. Special thanks to the open-source community for providing these tools.
-
----
-
-### Contact
-For any questions or support, feel free to open an issue or reach out to us at [your-email@example.com].

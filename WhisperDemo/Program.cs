@@ -8,7 +8,7 @@ class Program
     static async Task Main(string[] args)
     {
 
-        var audioFilePath = "c:/sounds/test.mp3";
+        var audioFilePath = args[0] != null ? args[0] : "c:/sounds/test.mp3";
 
 
         var modelName = "ggml-large-v3.bin";
